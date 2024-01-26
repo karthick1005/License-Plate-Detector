@@ -7,3 +7,5 @@ easyocr==1.7.0
 filterpy==1.4.5
 scikit-image
 torch
+opencv-contrib-python
+matplotlib
