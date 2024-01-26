@@ -4,6 +4,7 @@ import cv2
 import util
 from sort import *
 from util import get_car, read_license_plate, write_csv, check_image
+from Restapi import uploadtodatabase
 
 results = {}
 
@@ -13,7 +14,8 @@ mot_tracker = Sort()
 coco_model = YOLO('yolov8n.pt')
 license_plate_detector = YOLO('./models/license_plate_detector.pt')
 vehiclexml = cv2.CascadeClassifier('cars.xml')
-
+print(license_plate_detector.model)
+new
 
 def check_file():
     frame = cv2.imread('detected_vehicle.png')
@@ -30,7 +32,6 @@ def check_file():
 
     # Track vehicles
     # track_ids = mot_tracker.update(np.asarray(detections_))
-
     # Detect license plates
     license_plates = license_plate_detector(frame)[0]
     for license_plate in license_plates.boxes.data.tolist():
@@ -52,8 +53,8 @@ def check_file():
         # Read license plate number
         # plate_crop= check_image(license_plate_crop_thresh,license_plate_crop_gray)
         # # print(plate_crop)
-        license_plate_text = read_license_plate(license_plate_crop_gray)
-        print(license_plate_text)
+        license_plate_text, state = read_license_plate(license_plate_crop_gray)
+        uploadtodatabase(license_plate_text, state)
 
         # Store results if needed
         # results[car_id] = {'car': {'bbox': [xcar1, ycar1, xcar2, ycar2]},
@@ -126,6 +127,7 @@ def recordedvideo():
             # detect vehicles
             detections = coco_model(frame)[0]
             detections_ = []
+            cv2.imwrite('detected_vehicle.png', frame)
             for detection in detections.boxes.data.tolist():
                 x1, y1, x2, y2, score, class_id = detection
                 if int(class_id) in vehicles:
@@ -136,12 +138,13 @@ def recordedvideo():
 
             # detect license plates
             license_plates = license_plate_detector(frame)[0]
+            print(license_plates.boxes)
             for license_plate in license_plates.boxes.data.tolist():
                 x1, y1, x2, y2, score, class_id = license_plate
 
                 # assign license plate to car
                 xcar1, ycar1, xcar2, ycar2, car_id = get_car(license_plate, track_ids)
-
+                print(car_id)
                 if car_id != -1:
                     # crop license plate
                     license_plate_crop = frame[int(y1):int(y2), int(x1): int(x2), :]
@@ -153,8 +156,9 @@ def recordedvideo():
                     # visualize_plot(license_plate_crop, license_plate_crop_gray, license_plate_crop_thresh)
                     # read license plate number
                     # license_plate_text, license_plate_text_score = read_license_plate(license_plate_crop_thresh)
-                    license_plate_text = read_license_plate(license_plate_crop_thresh)
+                    license_plate_text, state = read_license_plate(license_plate_crop_thresh)
                     print(license_plate_text)
+                    uploadtodatabase(license_plate_text, state)
                     # if license_plate_text is not None:
                     # results[frame_nmr][car_id] = {'car': {'bbox': [xcar1, ycar1, xcar2, ycar2]},
                     #                               'license_plate': {'bbox': [x1, y1, x2, y2],
@@ -167,7 +171,7 @@ def recordedvideo():
 
 
 val = int(input("Enter whether live video (0) or recorded video(1)"))
-if val==0:
+if val == 0:
     live_video()
-else :
+else:
     recordedvideo()

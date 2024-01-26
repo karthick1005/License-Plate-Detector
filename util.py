@@ -40,7 +40,6 @@ state_codes = {
     'West Bengal': 'WB'
 }
 
-
 # Mapping dictionaries for character conversion
 dict_char_to_int = {'O': '0',
                     'I': '1',
@@ -163,12 +162,12 @@ def read_license_plate(license_plate_crop):
 
     detections = reader.readtext(license_plate_crop)
     combined_text = ''.join([detection[1] for detection in detections])
-    combined_text=combined_text.upper().replace(' ','')
+    combined_text = combined_text.upper().replace(' ', '')
     print("Combined Text:", combined_text)
-    for code in state_codes.values():
-        if code in combined_text:
-            return combined_text
-    return None
+    for name, code in state_codes.items():
+        if code in combined_text[:2]:
+            return combined_text, name
+    return None,None
     # for detection in detections:
     #
     #     bbox, text, score = detection
