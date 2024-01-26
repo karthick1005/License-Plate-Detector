@@ -3,6 +3,43 @@ import easyocr
 
 # Initialize the OCR reader
 reader = easyocr.Reader(['en'], gpu=False)
+state_codes = {
+    'Andaman and Nicobar Islands': 'AN',
+    'Andhra Pradesh': 'AP',
+    'Arunachal Pradesh': 'AR',
+    'Assam': 'AS',
+    'Bihar': 'BR',
+    'Chandigarh': 'CH',
+    'Chhattisgarh': 'CT',
+    'Dadra and Nagar Haveli and Daman and Diu': 'DN',
+    'Delhi': 'DL',
+    'Goa': 'GA',
+    'Gujarat': 'GJ',
+    'Haryana': 'HR',
+    'Himachal Pradesh': 'HP',
+    'Jharkhand': 'JH',
+    'Karnataka': 'KA',
+    'Kerala': 'KL',
+    'Lakshadweep': 'LD',
+    'Madhya Pradesh': 'MP',
+    'Maharashtra': 'MH',
+    'Manipur': 'MN',
+    'Meghalaya': 'ML',
+    'Mizoram': 'MZ',
+    'Nagaland': 'NL',
+    'Odisha': 'OD',
+    'Puducherry': 'PY',
+    'Punjab': 'PB',
+    'Rajasthan': 'RJ',
+    'Sikkim': 'SK',
+    'Tamil Nadu': 'TN',
+    'Telangana': 'TS',
+    'Tripura': 'TR',
+    'Uttar Pradesh': 'UP',
+    'Uttarakhand': 'UK',
+    'West Bengal': 'WB'
+}
+
 
 # Mapping dictionaries for character conversion
 dict_char_to_int = {'O': '0',
@@ -37,8 +74,8 @@ def write_csv(results, output_path):
             for car_id in results[frame_nmr].keys():
                 print(results[frame_nmr][car_id])
                 if 'car' in results[frame_nmr][car_id].keys() and \
-                   'license_plate' in results[frame_nmr][car_id].keys() and \
-                   'text' in results[frame_nmr][car_id]['license_plate'].keys():
+                        'license_plate' in results[frame_nmr][car_id].keys() and \
+                        'text' in results[frame_nmr][car_id]['license_plate'].keys():
                     f.write('{},{},{},{},{},{},{}\n'.format(frame_nmr,
                                                             car_id,
                                                             '[{} {} {} {}]'.format(
@@ -72,12 +109,12 @@ def license_complies_format(text):
         return False
 
     if (text[0] in string.ascii_uppercase or text[0] in dict_int_to_char.keys()) and \
-       (text[1] in string.ascii_uppercase or text[1] in dict_int_to_char.keys()) and \
-       (text[2] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] or text[2] in dict_char_to_int.keys()) and \
-       (text[3] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] or text[3] in dict_char_to_int.keys()) and \
-       (text[4] in string.ascii_uppercase or text[4] in dict_int_to_char.keys()) and \
-       (text[5] in string.ascii_uppercase or text[5] in dict_int_to_char.keys()) and \
-       (text[6] in string.ascii_uppercase or text[6] in dict_int_to_char.keys()):
+            (text[1] in string.ascii_uppercase or text[1] in dict_int_to_char.keys()) and \
+            (text[2] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] or text[2] in dict_char_to_int.keys()) and \
+            (text[3] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] or text[3] in dict_char_to_int.keys()) and \
+            (text[4] in string.ascii_uppercase or text[4] in dict_int_to_char.keys()) and \
+            (text[5] in string.ascii_uppercase or text[5] in dict_int_to_char.keys()) and \
+            (text[6] in string.ascii_uppercase or text[6] in dict_int_to_char.keys()):
         return True
     else:
         return False
@@ -105,6 +142,14 @@ def format_license(text):
     return license_plate_
 
 
+def check_image(license_plate_crop_thresh, license_plate_crop_gray):
+    detections_tresh = reader.readtext(license_plate_crop_thresh)
+    if len(detections_tresh) != 0:
+        return license_plate_crop_thresh
+    else:
+        return license_plate_crop_gray
+
+
 def read_license_plate(license_plate_crop):
     """
     Read the license plate text from the given cropped image.
@@ -117,16 +162,23 @@ def read_license_plate(license_plate_crop):
     """
 
     detections = reader.readtext(license_plate_crop)
-
-    for detection in detections:
-        bbox, text, score = detection
-
-        text = text.upper().replace(' ', '')
-
-        if license_complies_format(text):
-            return format_license(text), score
-
-    return None, None
+    combined_text = ''.join([detection[1] for detection in detections])
+    combined_text=combined_text.upper().replace(' ','')
+    print("Combined Text:", combined_text)
+    for code in state_codes.values():
+        if code in combined_text:
+            return combined_text
+    return None
+    # for detection in detections:
+    #
+    #     bbox, text, score = detection
+    #     print(text)
+    #     text = text.upper().replace(' ', '')
+    #
+    #     if license_complies_format(text):
+    #         return format_license(text), score
+    #
+    # return None, None
 
 
 def get_car(license_plate, vehicle_track_ids):
