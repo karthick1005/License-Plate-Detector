@@ -109,7 +109,7 @@ def visualize_plot(license_plate_crop, license_plate_crop_gray, license_plate_cr
 
 def recordedvideo():
     # load video
-    cap = cv2.VideoCapture('./sample.mp4')
+    cap = cv2.VideoCapture('./sample2.mp4')
 
     vehicles = [2, 3, 5, 7]
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
