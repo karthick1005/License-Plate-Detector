@@ -19,7 +19,7 @@ A smart computer vision project that detects vehicles and reads license plates f
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/license-plate-detector.git
+git clone https://github.com/karthick1005/license-plate-detector.git
 cd license-plate-detector
 ```
 
